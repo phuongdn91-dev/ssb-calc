@@ -945,7 +945,7 @@ function renderTiltSvg(H, alpha, beta, rUpper, rMain, rLower, angUpper, angMain,
   // Scale: always fit rLower (shortest/tightest beam) = 85% of drawW
   // rUpper and rMain shown proportionally, capped at frame
   const baseR = isFinite(rLower) ? rLower : (isFinite(rMain) ? rMain : 300);
-  const scale = (drawW * 0.88) / baseR;
+  const scale = (drawW * 0.10) / baseR;
   const cx = r => isFinite(r) ? Math.min(towerX + r * scale, W - 8) : W - 8;
 
   const xu = cx(rUpper), xm = cx(rMain), xl = cx(rLower);
