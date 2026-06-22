@@ -472,6 +472,7 @@ footer a{color:#1a3a5c;text-decoration:none}
         &#x1F5A9; Calculate
       </button>
       <div class="error-msg" id="tilt-err" style="margin-top:10px">&#x26A0; Vui lòng nhập đầy đủ H, β và α hợp lệ.</div>
+      <div id="tilt-warn-horizon" style="display:none;margin-top:10px;background:#fff8e1;border:0.5px solid #ffe082;border-radius:8px;padding:10px 12px;font-size:13px;color:#7a5800;line-height:1.6">&#x26A0;&#xFE0F; <strong>Over Horizon:</strong> Góc Upper 3dB (α − β/2) = <span id="tilt-warn-angle"></span>° ≤ 0° — tia beam hướng lên trời hoặc nằm ngang, không chạm đất. Kết quả Upper 3dB = ∞. Hãy tăng tilt hoặc giảm beam width.</div>
 
       <!-- Results -->
       <div id="tilt-results" style="display:none;margin-top:16px">
@@ -921,74 +922,107 @@ function calcTilt() {
   document.getElementById('tilt-res-lower').innerHTML = fmtR(rLower);
   document.getElementById('tilt-res-lower-angle').textContent = '(Góc: ' + angLower.toFixed(1) + '°)';
 
+  // Over horizon warning
+  const warnEl = document.getElementById('tilt-warn-horizon');
+  if (angUpper <= 0) {
+    document.getElementById('tilt-warn-angle').textContent = angUpper.toFixed(1);
+    warnEl.style.display = 'block';
+  } else {
+    warnEl.style.display = 'none';
+  }
+
   document.getElementById('tilt-results').style.display = 'block';
   renderTiltSvg(H, alpha, beta, rUpper, rMain, rLower, angUpper, angMain, angLower);
 }
 
 function renderTiltSvg(H, alpha, beta, rUpper, rMain, rLower, angUpper, angMain, angLower) {
   const W = 320, SVG_H = 200;
-  const towerX = 60, groundY = 180, towerTop = groundY - Math.min(H * 2.5, 130);
-  const maxR = isFinite(rLower) ? rLower : (isFinite(rMain) ? rMain * 1.5 : 200);
-  const scale = (W - towerX - 20) / maxR;
-
-  const gx = r => isFinite(r) ? towerX + r * scale : W - 10;
+  const towerX = 56, groundY = 182, towerH = Math.min(Math.max(H * 1.6, 55), 120);
+  const towerTop = groundY - towerH;
+  const drawW = W - towerX - 12;
   const toRad = d => d * Math.PI / 180;
 
-  // beam endpoint Y from tower top along the beam angle
-  const beamY = (ang, r) => {
-    if (!isFinite(r)) return groundY;
-    return towerTop + r * scale * Math.tan(toRad(ang));
-  };
+  // Scale: always fit rLower (shortest/tightest beam) = 85% of drawW
+  // rUpper and rMain shown proportionally, capped at frame
+  const baseR = isFinite(rLower) ? rLower : (isFinite(rMain) ? rMain : 300);
+  const scale = (drawW * 0.88) / baseR;
+  const cx = r => isFinite(r) ? Math.min(towerX + r * scale, W - 8) : W - 8;
 
-  const xu = gx(rUpper), xm = gx(rMain), xl = gx(rLower);
-  const yu = isFinite(rUpper) ? groundY : towerTop - 5;
-  const ym = groundY, yl = groundY;
+  const xu = cx(rUpper), xm = cx(rMain), xl = cx(rLower);
 
-  let svg = '<svg width="100%" viewBox="0 0 ' + W + ' ' + SVG_H + '" xmlns="http://www.w3.org/2000/svg" style="max-width:360px;display:block;margin:0 auto">';
+  let svg = '<svg width="100%" viewBox="0 0 ' + W + ' ' + SVG_H + '" xmlns="http://www.w3.org/2000/svg">';
 
   // Ground
-  svg += '<rect x="0" y="' + groundY + '" width="' + W + '" height="' + (SVG_H-groundY) + '" fill="#d4e8c2" rx="0"/>';
+  svg += '<rect x="0" y="' + groundY + '" width="' + W + '" height="' + (SVG_H - groundY) + '" fill="#d4e8c2"/>';
   svg += '<line x1="0" y1="' + groundY + '" x2="' + W + '" y2="' + groundY + '" stroke="#8aab6a" stroke-width="1.5"/>';
 
   // Tower
-  const tw = 8;
-  svg += '<polygon points="' + (towerX-tw/2) + ',' + groundY + ' ' + (towerX+tw/2) + ',' + groundY + ' ' + (towerX+2) + ',' + towerTop + ' ' + (towerX-2) + ',' + towerTop + '" fill="#5a7090" opacity="0.9"/>';
-  for (let y = towerTop+10; y < groundY; y += 15) {
+  const tw = 7;
+  svg += '<polygon points="' + (towerX-tw/2) + ',' + groundY + ' ' + (towerX+tw/2) + ',' + groundY + ' ' + (towerX+2) + ',' + towerTop + ' ' + (towerX-2) + ',' + towerTop + '" fill="#5a7090"/>';
+  for (let y = towerTop + 12; y < groundY; y += 13)
     svg += '<line x1="' + (towerX-tw/2) + '" y1="' + y + '" x2="' + (towerX+tw/2) + '" y2="' + y + '" stroke="#8090a0" stroke-width="1"/>';
-  }
+  svg += '<rect x="' + (towerX-1) + '" y="' + (towerTop-7) + '" width="2" height="7" fill="#b0b0b0"/>';
 
   // Height label
-  svg += '<line x1="' + (towerX-16) + '" y1="' + towerTop + '" x2="' + (towerX-16) + '" y2="' + groundY + '" stroke="#888" stroke-width="1" stroke-dasharray="3 2"/>';
-  svg += '<text x="' + (towerX-14) + '" y="' + ((towerTop+groundY)/2+4) + '" font-size="10" fill="#666" text-anchor="end">H=' + H + 'm</text>';
+  svg += '<line x1="' + (towerX-20) + '" y1="' + towerTop + '" x2="' + (towerX-20) + '" y2="' + groundY + '" stroke="#bbb" stroke-width="1" stroke-dasharray="3 2"/>';
+  svg += '<line x1="' + (towerX-23) + '" y1="' + towerTop + '" x2="' + (towerX-17) + '" y2="' + towerTop + '" stroke="#bbb" stroke-width="1"/>';
+  svg += '<line x1="' + (towerX-23) + '" y1="' + groundY + '" x2="' + (towerX-17) + '" y2="' + groundY + '" stroke="#bbb" stroke-width="1"/>';
+  svg += '<text x="' + (towerX-24) + '" y="' + ((towerTop+groundY)/2+4) + '" font-size="9" fill="#888" text-anchor="end">H=' + H + 'm</text>';
 
-  // Upper beam (light blue dashed)
-  if (isFinite(rUpper)) {
-    svg += '<line x1="' + towerX + '" y1="' + towerTop + '" x2="' + xu + '" y2="' + groundY + '" stroke="#74b3f7" stroke-width="1.5" stroke-dasharray="5 3"/>';
-    svg += '<text x="' + (xu+3) + '" y="' + (groundY-5) + '" font-size="9" fill="#4a90d9">Dmax</text>';
+  // ── Upper beam ──────────────────────────────────────────────────────────────
+  if (angUpper <= 0) {
+    // Over horizon: beam goes UP — draw angled upward from tower top to right edge
+    const upAngle = Math.abs(angUpper); // degrees above horizontal
+    const risePerUnit = Math.tan(toRad(upAngle));
+    const endX = W - 8;
+    const endY = towerTop - (endX - towerX) * risePerUnit;
+    const clampedY = Math.max(endY, 4); // don't go above canvas
+    svg += '<line x1="' + towerX + '" y1="' + towerTop + '" x2="' + endX + '" y2="' + clampedY + '" stroke="#74b3f7" stroke-width="1.5" stroke-dasharray="5 3"/>';
+    // Infinity arrow tip
+    svg += '<text x="' + (endX - 18) + '" y="' + Math.max(clampedY - 3, 12) + '" font-size="10" fill="#4a90d9">&#x2191;&#x221E;</text>';
+    // Label near tower
+    svg += '<text x="' + (towerX+8) + '" y="' + (towerTop - 12) + '" font-size="8.5" fill="#4a90d9">\u03b1\u2212\u03b2/2=' + angUpper.toFixed(1) + '\u00b0</text>';
   } else {
-    svg += '<line x1="' + towerX + '" y1="' + towerTop + '" x2="' + (W-8) + '" y2="' + (towerTop-2) + '" stroke="#74b3f7" stroke-width="1.5" stroke-dasharray="5 3"/>';
-    svg += '<text x="' + (W-30) + '" y="' + (towerTop-6) + '" font-size="9" fill="#4a90d9">&#x221E;</text>';
+    svg += '<line x1="' + towerX + '" y1="' + towerTop + '" x2="' + xu + '" y2="' + groundY + '" stroke="#74b3f7" stroke-width="1.5" stroke-dasharray="5 3"/>';
+    if (!isFinite(rUpper)) {
+      svg += '<text x="' + (W - 22) + '" y="' + (groundY - 4) + '" font-size="9" fill="#4a90d9">&#x221E;</text>';
+    } else {
+      svg += '<text x="' + (xu - 22) + '" y="' + (groundY - 4) + '" font-size="9" fill="#4a90d9">Dmax</text>';
+    }
   }
 
-  // Main beam (medium blue)
+  // ── Main beam ───────────────────────────────────────────────────────────────
   svg += '<line x1="' + towerX + '" y1="' + towerTop + '" x2="' + xm + '" y2="' + groundY + '" stroke="#1a6fc4" stroke-width="2" stroke-dasharray="6 3"/>';
-  svg += '<text x="' + (xm+3) + '" y="' + (groundY-5) + '" font-size="9" fill="#1a6fc4">D</text>';
+  svg += '<text x="' + (xm - 8) + '" y="' + (groundY - 4) + '" font-size="9" fill="#1a6fc4">D</text>';
 
-  // Lower beam (dark blue)
-  svg += '<line x1="' + towerX + '" y1="' + towerTop + '" x2="' + xl + '" y2="' + groundY + '" stroke="#1a3a5c" stroke-width="2" stroke-dasharray="6 3"/>';
-  svg += '<text x="' + (xl+3) + '" y="' + (groundY-5) + '" font-size="9" fill="#1a3a5c">Dmin</text>';
+  // ── Lower beam ──────────────────────────────────────────────────────────────
+  svg += '<line x1="' + towerX + '" y1="' + towerTop + '" x2="' + xl + '" y2="' + groundY + '" stroke="#1a3a5c" stroke-width="2" stroke-dasharray="4 2"/>';
+  svg += '<text x="' + (xl - 18) + '" y="' + (groundY - 4) + '" font-size="9" fill="#1a3a5c">Dmin</text>';
 
-  // Angle arc
+  // ── Angle arc + labels at tower ─────────────────────────────────────────────
   const arcR = 28;
-  const a1 = toRad(90 - angUpper), a2 = toRad(90 - angLower);
-  const ax1 = towerX + arcR*Math.cos(a1), ay1 = towerTop + arcR*Math.sin(a1);
-  const ax2 = towerX + arcR*Math.cos(a2), ay2 = towerTop + arcR*Math.sin(a2);
-  svg += '<path d="M ' + ax1 + ' ' + ay1 + ' A ' + arcR + ' ' + arcR + ' 0 0 1 ' + ax2 + ' ' + ay2 + '" fill="none" stroke="#e07030" stroke-width="1"/>';
-
-  // Angle labels
-  svg += '<text x="' + (towerX+arcR+4) + '" y="' + (towerTop+10) + '" font-size="9" fill="#4a90d9">&alpha;&minus;&beta;/2</text>';
-  svg += '<text x="' + (towerX+arcR+4) + '" y="' + (towerTop+22) + '" font-size="9" fill="#1a6fc4">&alpha;</text>';
-  svg += '<text x="' + (towerX+arcR+4) + '" y="' + (towerTop+34) + '" font-size="9" fill="#1a3a5c">&alpha;+&beta;/2</text>';
+  // Main and lower beams always go downward
+  const a_m = toRad(angMain), a_l = toRad(angLower);
+  // Upper: if over horizon, skip arc to upper (draw only main→lower arc)
+  if (angUpper > 0) {
+    const a_u = toRad(angUpper);
+    const ax1 = towerX + arcR * Math.cos(a_u), ay1 = towerTop + arcR * Math.sin(a_u);
+    const ax2 = towerX + arcR * Math.cos(a_l), ay2 = towerTop + arcR * Math.sin(a_l);
+    svg += '<path d="M ' + ax1 + ' ' + ay1 + ' A ' + arcR + ' ' + arcR + ' 0 0 1 ' + ax2 + ' ' + ay2 + '" fill="none" stroke="#e07030" stroke-width="1"/>';
+    // Labels
+    const lx = towerX + arcR + 4;
+    svg += '<text x="' + lx + '" y="' + (towerTop + arcR * Math.sin(a_u) + 3) + '" font-size="8" fill="#4a90d9">\u03b1\u2212\u03b2/2</text>';
+    svg += '<text x="' + lx + '" y="' + (towerTop + arcR * Math.sin(a_m) + 3) + '" font-size="8" fill="#1a6fc4">\u03b1</text>';
+    svg += '<text x="' + lx + '" y="' + (towerTop + arcR * Math.sin(a_l) + 3) + '" font-size="8" fill="#1a3a5c">\u03b1+\u03b2/2</text>';
+  } else {
+    // Only main→lower arc
+    const ax1 = towerX + arcR * Math.cos(a_m), ay1 = towerTop + arcR * Math.sin(a_m);
+    const ax2 = towerX + arcR * Math.cos(a_l), ay2 = towerTop + arcR * Math.sin(a_l);
+    svg += '<path d="M ' + ax1 + ' ' + ay1 + ' A ' + arcR + ' ' + arcR + ' 0 0 1 ' + ax2 + ' ' + ay2 + '" fill="none" stroke="#e07030" stroke-width="1"/>';
+    const lx = towerX + arcR + 4;
+    svg += '<text x="' + lx + '" y="' + (towerTop + arcR * Math.sin(a_m) + 3) + '" font-size="8" fill="#1a6fc4">\u03b1</text>';
+    svg += '<text x="' + lx + '" y="' + (towerTop + arcR * Math.sin(a_l) + 3) + '" font-size="8" fill="#1a3a5c">\u03b1+\u03b2/2</text>';
+  }
 
   svg += '</svg>';
   document.getElementById('tilt-svg-wrap').innerHTML = svg;
