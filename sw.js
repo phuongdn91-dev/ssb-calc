@@ -1,5 +1,5 @@
-const CACHE = "ssb-v1";
-const FILES = ["/index.html", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
+const CACHE = "ssb-v2";
+const FILES = ["/ssb-calc/index.html", "/ssb-calc/manifest.json", "/ssb-calc/icons/icon-192.png", "/ssb-calc/icons/icon-512.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
