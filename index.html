@@ -93,7 +93,7 @@ footer a{color:#1a3a5c;text-decoration:none}
 <header>
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
   <h1>RF Tools</h1>
-  <div class="sub">5G · 4G · dBm · Tilt</div>
+  <div class="sub">5G · 4G · LTE</div>
 </header>
 
 <div class="container">
@@ -110,11 +110,11 @@ footer a{color:#1a3a5c;text-decoration:none}
   </div>
 
   <!-- Tech switcher -->
-  <div class="tech-switch" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; background: #ddd; border: none; border-radius: 10px; overflow: hidden; margin-bottom: 16px;">
-    <button class="tech-btn active" id="btn-tech-5g" onclick="switchTech('5g')" style="border: none; border-radius: 0; padding: 10px 5px; font-size: 13px;">📡 5G NR</button>
-    <button class="tech-btn" id="btn-tech-4g" onclick="switchTech('4g')" style="border: none; border-radius: 0; padding: 10px 5px; font-size: 13px;">📶 4G LTE</button>
-    <button class="tech-btn" id="btn-tech-dbm" onclick="switchTech('dbm')" style="border: none; border-radius: 0; padding: 10px 5px; font-size: 13px;">📊 dBm ↔ W</button>
-    <button class="tech-btn" id="btn-tech-tilt" onclick="switchTech('tilt')" style="border: none; border-radius: 0; padding: 10px 5px; font-size: 13px;">📐 Tilt & Radius</button>
+  <div class="tech-switch">
+    <button class="tech-btn active" onclick="switchTech('5g')">&#x1F4E1; 5G NR</button>
+    <button class="tech-btn" onclick="switchTech('4g')">&#x1F4F6; 4G LTE</button>
+    <button class="tech-btn" onclick="switchTech('dbm')">&#x26A1; dBm &#x2194; Watts</button>
+    <button class="tech-btn" onclick="switchTech('tilt')">&#x2299; Tilt to Radius</button>
   </div>
 
   <!-- 5G section -->
@@ -397,78 +397,138 @@ footer a{color:#1a3a5c;text-decoration:none}
       <div style="margin-top:8px;background:#f5f5f5;border-radius:8px;padding:10px 14px;font-family:monospace;font-size:12px;color:#444;line-height:1.8" id="eci-res-bin">—</div>
     </div>
   </div>
-  
   </div><!-- /tech-4g -->
-
   <!-- dBm section -->
-  <div id="tech-tech-dbm" class="tech-section" style="display:none">
+  <div id="tech-dbm" class="tech-section">
     <div class="card">
-      <div class="card-title">Chuyển đổi dBm ↔ Watts</div>
-      <div class="modes">
-        <button class="mode-btn active" id="dbm-btn-to-w" onclick="setDbmMode('to-w')">dBm → Watts / mW</button>
-        <button class="mode-btn" id="dbm-btn-to-dbm" onclick="setDbmMode('to-dbm')">Watts → dBm</button>
-      </div>
+      <div class="card-title">dBm &#x2194; Watts</div>
 
-      <div id="dbm-mode-to-w" class="tab-panel active">
+      <div style="margin-bottom:20px">
+        <div style="color:#1a3a5c;font-weight:600;font-size:13px;margin-bottom:10px">dBm &#x2192; Watts</div>
+        <div class="input-row" style="margin-bottom:10px">
+          <div class="input-group">
+            <label for="dbm-inp-dbm">dBm</label>
+            <input type="number" id="dbm-inp-dbm" placeholder="Ví dụ: 30" step="0.1" inputmode="decimal">
+          </div>
+        </div>
         <div class="input-row">
           <div class="input-group">
-            <label for="inp-dbm-val">Mức công suất (dBm)</label>
-            <input type="number" id="inp-dbm-val" placeholder="Ví dụ: 43, 46, 30" step="any" inputmode="decimal">
+            <label>Watts (W)</label>
+            <div id="dbm-res-w" style="padding:11px 12px;background:#f0f5fb;border:0.5px solid #c8daea;border-radius:8px;font-size:16px;font-weight:600;color:#1a3a5c;min-height:44px">—</div>
           </div>
           <button class="calc-btn" onclick="calcDbmToW()">Tính</button>
         </div>
       </div>
 
-      <div id="dbm-mode-to-dbm" class="tab-panel" style="display:none">
+      <div style="border-top:0.5px solid #eee;margin:4px 0 20px;position:relative;text-align:center">
+        <span style="position:relative;top:-11px;background:#fff;padding:0 10px;color:#999;font-size:18px">&#x21C5;</span>
+      </div>
+
+      <div>
+        <div style="color:#1a3a5c;font-weight:600;font-size:13px;margin-bottom:10px">Watts &#x2192; dBm</div>
+        <div class="input-row" style="margin-bottom:10px">
+          <div class="input-group">
+            <label for="dbm-inp-w">Watts (W)</label>
+            <input type="number" id="dbm-inp-w" placeholder="Ví dụ: 1" step="0.001" min="0" inputmode="decimal">
+          </div>
+        </div>
         <div class="input-row">
           <div class="input-group">
-            <label for="inp-w-val">Công suất (Watts)</label>
-            <input type="number" id="inp-w-val" placeholder="Ví dụ: 20, 40, 1" step="any" min="0.000001" inputmode="decimal">
+            <label>dBm</label>
+            <div id="dbm-res-dbm" style="padding:11px 12px;background:#f0f5fb;border:0.5px solid #c8daea;border-radius:8px;font-size:16px;font-weight:600;color:#1a3a5c;min-height:44px">—</div>
           </div>
           <button class="calc-btn" onclick="calcWToDbm()">Tính</button>
         </div>
       </div>
+    </div>
 
-      <div class="results" id="dbm-results" style="display:none; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px;">
-        <div class="result-card"><div class="result-label">dBm</div><div class="result-value" id="res-dbm-dbm">—</div></div>
-        <div class="result-card"><div class="result-label">Watts (W)</div><div class="result-value" id="res-dbm-w">—</div></div>
-        <div class="result-card"><div class="result-label">Milliwatts (mW)</div><div class="result-value" id="res-dbm-mw">—</div></div>
+    <div class="card" style="background:#eef4ff;border-color:#c8daea">
+      <div style="color:#1a3a5c;font-weight:700;font-size:13px;margin-bottom:10px">CÔNG THỨC</div>
+      <div style="font-size:13px;color:#333;line-height:2.2;font-family:monospace">
+        W (Watts) = 10<sup>((dBm &minus; 30) / 10)</sup><br>
+        dBm = 10 &times; log<sub>10</sub>(W) + 30
       </div>
     </div>
-  </div>
+  </div><!-- /tech-dbm -->
 
   <!-- Tilt to Radius section -->
-  <div id="tech-tech-tilt" class="tech-section" style="display:none">
+  <div id="tech-tilt" class="tech-section">
     <div class="card">
-      <div class="card-title">Tính Bán kính phủ sóng từ độ nghiêng (Tilt)</div>
-      <div style="display: flex; flex-direction: column; gap: 12px;">
-        <div class="input-group">
-          <label for="tilt-inp-h">Chiều cao Anten H (mét)</label>
-          <input type="number" id="tilt-inp-h" placeholder="Ví dụ: 30" step="any" min="1">
-        </div>
-        <div class="input-group">
-          <label for="tilt-inp-bw">Độ mở đứng búp sóng Vertical Beamwidth (°)</label>
-          <input type="number" id="tilt-inp-bw" placeholder="Ví dụ: 7, 6.5" step="any" min="0.1">
-        </div>
-        <div class="input-group">
-          <label for="tilt-inp-tilt">Tổng góc nghiêng Tilt (Cơ + Điện) (°)</label>
-          <input type="number" id="tilt-inp-tilt" placeholder="Ví dụ: 6, 8" step="any">
-        </div>
-        <button class="calc-btn" style="width: 100%; margin-top: 6px;" onclick="calcTiltToRadius()">Tính toán bán kính</button>
-      </div>
-      <div class="error-msg" id="tilt-err">⚠ Góc nghiêng phải lớn hơn nửa độ rộng búp sóng (Tilt > BW/2) để chạm đất.</div>
+      <div class="card-title">Tilt to Radius</div>
 
-      <div class="results" id="tilt-results" style="display:none; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px;">
-        <div class="result-card" style="grid-column: span 2;"><div class="result-label">Khoảng cách trung tâm (R_center)</div><div class="result-value" id="res-tilt-center" style="color: #2e7d32;">—</div></div>
-        <div class="result-card"><div class="result-label">Rìa gần (R_near)</div><div class="result-value" id="res-tilt-near">—</div></div>
-        <div class="result-card"><div class="result-label">Rìa xa (R_far)</div><div class="result-value" id="res-tilt-far">—</div></div>
+      <div class="input-group" style="margin-bottom:12px">
+        <label for="tilt-h">Height Above Average Terrain H (m)</label>
+        <input type="number" id="tilt-h" placeholder="Ví dụ: 40" step="0.1" min="0" inputmode="decimal">
       </div>
-      <!-- Sơ Đồ Đồ Họa Cực Nét (High-DPI Fix) -->
-      <div id="tilt-canvas-container" style="display:none; margin-top: 14px; text-align: center; background: #fff; border-radius: 8px; padding: 12px; border: 1px solid #e2e8f0;">
-        <canvas id="tiltCanvas" style="width: 100%; max-width: 500px; height: auto; display: block; margin: 0 auto;"></canvas>
+      <div class="input-group" style="margin-bottom:12px">
+        <label for="tilt-bw">Vertical Beam Width &beta; (deg)</label>
+        <input type="number" id="tilt-bw" placeholder="Ví dụ: 6" step="0.1" min="0" inputmode="decimal">
+      </div>
+      <div class="input-group" style="margin-bottom:16px">
+        <label for="tilt-alpha">Down Tilt &alpha; (deg)</label>
+        <input type="number" id="tilt-alpha" placeholder="Ví dụ: 3" step="0.1" min="0" inputmode="decimal">
+      </div>
+      <button class="calc-btn" style="width:100%;padding:13px;font-size:15px" onclick="calcTilt()">
+        &#x1F5A9; Calculate
+      </button>
+      <div class="error-msg" id="tilt-err" style="margin-top:10px">&#x26A0; Vui lòng nhập đầy đủ H, β và α hợp lệ.</div>
+
+      <!-- Results -->
+      <div id="tilt-results" style="display:none;margin-top:16px">
+        <div id="tilt-card-upper" style="background:#ddeeff;border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px">
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+            <line x1="8" y1="36" x2="36" y2="14" stroke="#1a3a5c" stroke-width="1.5" stroke-dasharray="3 2"/>
+            <polygon points="8,28 8,36 16,36" fill="#1a3a5c" opacity="0.3"/>
+            <line x1="8" y1="36" x2="8" y2="14" stroke="#1a3a5c" stroke-width="2"/>
+            <line x1="6" y1="36" x2="10" y2="36" stroke="#1a3a5c" stroke-width="1.5"/>
+          </svg>
+          <div>
+            <div style="font-size:12px;color:#1a3a5c;font-weight:600">Upper 3dB (&alpha; &minus; &beta;/2)</div>
+            <div id="tilt-res-upper" style="font-size:22px;font-weight:700;color:#1a3a5c">—</div>
+            <div id="tilt-res-upper-angle" style="font-size:12px;color:#5a7090"></div>
+          </div>
+        </div>
+        <div id="tilt-card-main" style="background:#5b8fd6;border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px">
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+            <line x1="8" y1="36" x2="36" y2="22" stroke="white" stroke-width="1.5" stroke-dasharray="3 2"/>
+            <polygon points="8,28 8,36 16,36" fill="white" opacity="0.4"/>
+            <line x1="8" y1="36" x2="8" y2="14" stroke="white" stroke-width="2"/>
+            <line x1="6" y1="36" x2="10" y2="36" stroke="white" stroke-width="1.5"/>
+          </svg>
+          <div>
+            <div style="font-size:12px;color:white;font-weight:600">Main Beam (&alpha;)</div>
+            <div id="tilt-res-main" style="font-size:22px;font-weight:700;color:white">—</div>
+            <div id="tilt-res-main-angle" style="font-size:12px;color:rgba(255,255,255,0.8)"></div>
+          </div>
+        </div>
+        <div id="tilt-card-lower" style="background:#1a3a5c;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:14px">
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+            <line x1="8" y1="20" x2="36" y2="36" stroke="white" stroke-width="1.5" stroke-dasharray="3 2"/>
+            <polygon points="8,20 8,36 16,36" fill="white" opacity="0.4"/>
+            <line x1="8" y1="36" x2="8" y2="14" stroke="white" stroke-width="2"/>
+            <line x1="6" y1="36" x2="10" y2="36" stroke="white" stroke-width="1.5"/>
+          </svg>
+          <div>
+            <div style="font-size:12px;color:white;font-weight:600">Lower 3dB (&alpha; + &beta;/2)</div>
+            <div id="tilt-res-lower" style="font-size:22px;font-weight:700;color:white">—</div>
+            <div id="tilt-res-lower-angle" style="font-size:12px;color:rgba(255,255,255,0.8)"></div>
+          </div>
+        </div>
+
+        <!-- SVG diagram -->
+        <div id="tilt-svg-wrap" style="background:#f5f8fc;border:0.5px solid #c8daea;border-radius:10px;padding:12px;overflow-x:auto"></div>
       </div>
     </div>
-  </div>
+
+    <div class="card" style="background:#eef4ff;border-color:#c8daea">
+      <div style="color:#1a3a5c;font-weight:700;font-size:13px;margin-bottom:10px">GHI CHÚ</div>
+      <div style="font-size:13px;color:#333;line-height:2;font-family:monospace">
+        &bull; Upper 3dB: H / tan(&alpha; &minus; &beta;/2)<br>
+        &bull; Main Beam: H / tan(&alpha;)<br>
+        &bull; Lower 3dB: H / tan(&alpha; + &beta;/2)
+      </div>
+    </div>
+  </div><!-- /tech-tilt -->
 
 
   <!-- Deploy guide -->
@@ -636,7 +696,7 @@ function switchLteTab(el) {
 }
 
 function switchTech(t) {
-  document.querySelectorAll('.tech-btn').forEach((b,i) => b.classList.toggle('active', ['5g','4g'][i]===t));
+  document.querySelectorAll('.tech-btn').forEach((b,i) => b.classList.toggle('active', ['5g','4g','dbm','tilt'][i]===t));
   document.querySelectorAll('.tech-section').forEach(s => s.classList.remove('active'));
   document.getElementById('tech-'+t).classList.add('active');
 }
@@ -806,251 +866,138 @@ function calcEciEncode() {
 });
 
 
-// Hàm switchTech cải tiến cho 4 module
-function switchTech(tech) {
-  document.querySelectorAll('.tech-section').forEach(el => el.style.display = 'none');
-  document.querySelectorAll('.tech-btn').forEach(el => el.classList.remove('active'));
-  
-  if (tech === '5g') {
-    document.getElementById('tech-5g').style.display = 'block';
-    document.getElementById('btn-tech-5g').classList.add('active');
-  } else if (tech === '4g') {
-    document.getElementById('tech-4g').style.display = 'block';
-    document.getElementById('btn-tech-4g').classList.add('active');
-  } else if (tech === 'dbm') {
-    document.getElementById('tech-tech-dbm').style.display = 'block';
-    document.getElementById('btn-tech-dbm').classList.add('active');
-  } else if (tech === 'tilt') {
-    document.getElementById('tech-tech-tilt').style.display = 'block';
-    document.getElementById('btn-tech-tilt').classList.add('active');
-  }
-}
-
-// Logic cho module dBm
-function setDbmMode(mode) {
-  if (mode === 'to-w') {
-    document.getElementById('dbm-mode-to-w').style.display = 'block';
-    document.getElementById('dbm-mode-to-dbm').style.display = 'none';
-    document.getElementById('dbm-btn-to-w').classList.add('active');
-    document.getElementById('dbm-btn-to-dbm').classList.remove('active');
-  } else {
-    document.getElementById('dbm-mode-to-w').style.display = 'none';
-    document.getElementById('dbm-mode-to-dbm').style.display = 'block';
-    document.getElementById('dbm-btn-to-w').classList.remove('active');
-    document.getElementById('dbm-btn-to-dbm').classList.add('active');
-  }
-}
-
+// ─── dBm ↔ Watts ──────────────────────────────────────────────────────────────
 function calcDbmToW() {
-  const dbm = parseFloat(document.getElementById('inp-dbm-val').value);
-  if (isNaN(dbm)) return;
+  const dbm = parseFloat(document.getElementById('dbm-inp-dbm').value);
+  if (isNaN(dbm)) { document.getElementById('dbm-res-w').textContent = '—'; return; }
   const w = Math.pow(10, (dbm - 30) / 10);
-  const mw = Math.pow(10, dbm / 10);
-  
-  document.getElementById('res-dbm-dbm').innerText = dbm + " dBm";
-  document.getElementById('res-dbm-w').innerText = w >= 0.01 ? w.toFixed(3) + " W" : w.toExponential(3) + " W";
-  document.getElementById('res-dbm-mw').innerText = mw.toLocaleString('vi-VN', {maximumFractionDigits: 2}) + " mW";
-  document.getElementById('dbm-results').style.display = 'grid';
+  const s = w >= 1 ? w.toFixed(4) + ' W' : w >= 0.001 ? (w*1000).toFixed(4) + ' mW' : (w*1e6).toFixed(4) + ' µW';
+  document.getElementById('dbm-res-w').textContent = s;
 }
-
 function calcWToDbm() {
-  const w = parseFloat(document.getElementById('inp-w-val').value);
-  if (isNaN(w) || w <= 0) return;
+  const w = parseFloat(document.getElementById('dbm-inp-w').value);
+  if (isNaN(w) || w <= 0) { document.getElementById('dbm-res-dbm').textContent = '—'; return; }
   const dbm = 10 * Math.log10(w) + 30;
-  const mw = w * 1000;
-  
-  document.getElementById('res-dbm-dbm').innerText = dbm.toFixed(2) + " dBm";
-  document.getElementById('res-dbm-w').innerText = w + " W";
-  document.getElementById('res-dbm-mw').innerText = mw.toLocaleString('vi-VN', {maximumFractionDigits: 2}) + " mW";
-  document.getElementById('dbm-results').style.display = 'grid';
+  document.getElementById('dbm-res-dbm').textContent = dbm.toFixed(4) + ' dBm';
+}
+['dbm-inp-dbm'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('keydown', e => { if (e.key==='Enter') calcDbmToW(); });
+});
+['dbm-inp-w'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('keydown', e => { if (e.key==='Enter') calcWToDbm(); });
+});
+
+// ─── Tilt to Radius ────────────────────────────────────────────────────────────
+function calcTilt() {
+  const H     = parseFloat(document.getElementById('tilt-h').value);
+  const beta  = parseFloat(document.getElementById('tilt-bw').value);
+  const alpha = parseFloat(document.getElementById('tilt-alpha').value);
+  if (isNaN(H)||isNaN(beta)||isNaN(alpha)||H<=0||beta<=0||alpha<0) {
+    showErr('tilt-err', true); return;
+  }
+  showErr('tilt-err', false);
+
+  const toRad = d => d * Math.PI / 180;
+  const angUpper = alpha - beta/2;
+  const angMain  = alpha;
+  const angLower = alpha + beta/2;
+
+  const calcR = ang => {
+    if (ang <= 0) return Infinity;
+    return H / Math.tan(toRad(ang));
+  };
+  const fmtR = r => r === Infinity ? '&#x221E; m' : r.toFixed(1) + ' m';
+
+  const rUpper = calcR(angUpper);
+  const rMain  = calcR(angMain);
+  const rLower = calcR(angLower);
+
+  document.getElementById('tilt-res-upper').innerHTML = fmtR(rUpper);
+  document.getElementById('tilt-res-upper-angle').textContent = '(Góc: ' + angUpper.toFixed(1) + '°)';
+  document.getElementById('tilt-res-main').innerHTML  = fmtR(rMain);
+  document.getElementById('tilt-res-main-angle').textContent  = '(Góc: ' + angMain.toFixed(1) + '°)';
+  document.getElementById('tilt-res-lower').innerHTML = fmtR(rLower);
+  document.getElementById('tilt-res-lower-angle').textContent = '(Góc: ' + angLower.toFixed(1) + '°)';
+
+  document.getElementById('tilt-results').style.display = 'block';
+  renderTiltSvg(H, alpha, beta, rUpper, rMain, rLower, angUpper, angMain, angLower);
 }
 
-// Logic cho module Tilt to Radius
-function calcTiltToRadius() {
-  const h = parseFloat(document.getElementById('tilt-inp-h').value);
-  const bw = parseFloat(document.getElementById('tilt-inp-bw').value);
-  const tilt = parseFloat(document.getElementById('tilt-inp-tilt').value);
-  const errEl = document.getElementById('tilt-err');
-  const resEl = document.getElementById('tilt-results');
-  
-  if (isNaN(h) || isNaN(bw) || isNaN(tilt) || h <= 0 || bw <= 0) return;
-  
-  if (errEl) errEl.style.display = 'none';
-  
-  const rad = Math.PI / 180;
-  
-  // Tính toán kèm cơ chế fallback Over horizon
-  let rCenter = (tilt > 0) ? (h / Math.tan(tilt * rad)).toFixed(1) + " m" : "Over horizon";
-  let rNear = ((tilt + bw / 2) > 0) ? (h / Math.tan((tilt + bw / 2) * rad)).toFixed(1) + " m" : "Over horizon";
-  let rFar = ((tilt - bw / 2) > 0) ? (h / Math.tan((tilt - bw / 2) * rad)).toFixed(1) + " m" : "Over horizon";
-  
-  document.getElementById('res-tilt-center').innerText = rCenter;
-  document.getElementById('res-tilt-near').innerText = rNear;
-  document.getElementById('res-tilt-far').innerText = rFar;
-  resEl.style.display = 'grid';
-  
-  // Vẽ đồ thị tự động siêu nét
-  drawTiltDiagram(h, bw, tilt, rCenter, rNear, rFar);
+function renderTiltSvg(H, alpha, beta, rUpper, rMain, rLower, angUpper, angMain, angLower) {
+  const W = 320, SVG_H = 200;
+  const towerX = 60, groundY = 180, towerTop = groundY - Math.min(H * 2.5, 130);
+  const maxR = isFinite(rLower) ? rLower : (isFinite(rMain) ? rMain * 1.5 : 200);
+  const scale = (W - towerX - 20) / maxR;
+
+  const gx = r => isFinite(r) ? towerX + r * scale : W - 10;
+  const toRad = d => d * Math.PI / 180;
+
+  // beam endpoint Y from tower top along the beam angle
+  const beamY = (ang, r) => {
+    if (!isFinite(r)) return groundY;
+    return towerTop + r * scale * Math.tan(toRad(ang));
+  };
+
+  const xu = gx(rUpper), xm = gx(rMain), xl = gx(rLower);
+  const yu = isFinite(rUpper) ? groundY : towerTop - 5;
+  const ym = groundY, yl = groundY;
+
+  let svg = '<svg width="100%" viewBox="0 0 ' + W + ' ' + SVG_H + '" xmlns="http://www.w3.org/2000/svg" style="max-width:360px;display:block;margin:0 auto">';
+
+  // Ground
+  svg += '<rect x="0" y="' + groundY + '" width="' + W + '" height="' + (SVG_H-groundY) + '" fill="#d4e8c2" rx="0"/>';
+  svg += '<line x1="0" y1="' + groundY + '" x2="' + W + '" y2="' + groundY + '" stroke="#8aab6a" stroke-width="1.5"/>';
+
+  // Tower
+  const tw = 8;
+  svg += '<polygon points="' + (towerX-tw/2) + ',' + groundY + ' ' + (towerX+tw/2) + ',' + groundY + ' ' + (towerX+2) + ',' + towerTop + ' ' + (towerX-2) + ',' + towerTop + '" fill="#5a7090" opacity="0.9"/>';
+  for (let y = towerTop+10; y < groundY; y += 15) {
+    svg += '<line x1="' + (towerX-tw/2) + '" y1="' + y + '" x2="' + (towerX+tw/2) + '" y2="' + y + '" stroke="#8090a0" stroke-width="1"/>';
+  }
+
+  // Height label
+  svg += '<line x1="' + (towerX-16) + '" y1="' + towerTop + '" x2="' + (towerX-16) + '" y2="' + groundY + '" stroke="#888" stroke-width="1" stroke-dasharray="3 2"/>';
+  svg += '<text x="' + (towerX-14) + '" y="' + ((towerTop+groundY)/2+4) + '" font-size="10" fill="#666" text-anchor="end">H=' + H + 'm</text>';
+
+  // Upper beam (light blue dashed)
+  if (isFinite(rUpper)) {
+    svg += '<line x1="' + towerX + '" y1="' + towerTop + '" x2="' + xu + '" y2="' + groundY + '" stroke="#74b3f7" stroke-width="1.5" stroke-dasharray="5 3"/>';
+    svg += '<text x="' + (xu+3) + '" y="' + (groundY-5) + '" font-size="9" fill="#4a90d9">Dmax</text>';
+  } else {
+    svg += '<line x1="' + towerX + '" y1="' + towerTop + '" x2="' + (W-8) + '" y2="' + (towerTop-2) + '" stroke="#74b3f7" stroke-width="1.5" stroke-dasharray="5 3"/>';
+    svg += '<text x="' + (W-30) + '" y="' + (towerTop-6) + '" font-size="9" fill="#4a90d9">&#x221E;</text>';
+  }
+
+  // Main beam (medium blue)
+  svg += '<line x1="' + towerX + '" y1="' + towerTop + '" x2="' + xm + '" y2="' + groundY + '" stroke="#1a6fc4" stroke-width="2" stroke-dasharray="6 3"/>';
+  svg += '<text x="' + (xm+3) + '" y="' + (groundY-5) + '" font-size="9" fill="#1a6fc4">D</text>';
+
+  // Lower beam (dark blue)
+  svg += '<line x1="' + towerX + '" y1="' + towerTop + '" x2="' + xl + '" y2="' + groundY + '" stroke="#1a3a5c" stroke-width="2" stroke-dasharray="6 3"/>';
+  svg += '<text x="' + (xl+3) + '" y="' + (groundY-5) + '" font-size="9" fill="#1a3a5c">Dmin</text>';
+
+  // Angle arc
+  const arcR = 28;
+  const a1 = toRad(90 - angUpper), a2 = toRad(90 - angLower);
+  const ax1 = towerX + arcR*Math.cos(a1), ay1 = towerTop + arcR*Math.sin(a1);
+  const ax2 = towerX + arcR*Math.cos(a2), ay2 = towerTop + arcR*Math.sin(a2);
+  svg += '<path d="M ' + ax1 + ' ' + ay1 + ' A ' + arcR + ' ' + arcR + ' 0 0 1 ' + ax2 + ' ' + ay2 + '" fill="none" stroke="#e07030" stroke-width="1"/>';
+
+  // Angle labels
+  svg += '<text x="' + (towerX+arcR+4) + '" y="' + (towerTop+10) + '" font-size="9" fill="#4a90d9">&alpha;&minus;&beta;/2</text>';
+  svg += '<text x="' + (towerX+arcR+4) + '" y="' + (towerTop+22) + '" font-size="9" fill="#1a6fc4">&alpha;</text>';
+  svg += '<text x="' + (towerX+arcR+4) + '" y="' + (towerTop+34) + '" font-size="9" fill="#1a3a5c">&alpha;+&beta;/2</text>';
+
+  svg += '</svg>';
+  document.getElementById('tilt-svg-wrap').innerHTML = svg;
 }
 
-function drawTiltDiagram(h, bw, tilt, rCenterVal, rNearVal, rFarVal) {
-  const canvas = document.getElementById('tiltCanvas');
-  const ctx = canvas.getContext('2d');
-  const container = document.getElementById('tilt-canvas-container');
-  container.style.display = 'block';
-  
-  // Sửa lỗi mờ bằng giải pháp High-DPI / Retina Canvas
-  const dpr = window.devicePixelRatio || 1;
-  const logicalWidth = 500;
-  const logicalHeight = 280;
-  
-  canvas.style.width = logicalWidth + "px";
-  canvas.style.height = logicalHeight + "px";
-  canvas.width = logicalWidth * dpr;
-  canvas.height = logicalHeight * dpr;
-  
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.scale(dpr, dpr);
-  
-  // Vẽ nền trắng mịn
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, logicalWidth, logicalHeight);
-  
-  const startX = 65;
-  const startY = 45;
-  const groundY = 225;
-  const antennaHeightPx = groundY - startY;
-  
-  // 1. Vẽ mặt đất nằm ngang
-  ctx.beginPath();
-  ctx.moveTo(15, groundY);
-  ctx.lineTo(485, groundY);
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = "#475569";
-  ctx.stroke();
-  
-  // Gạch mặt đất kỹ thuật sắc nét
-  ctx.beginPath();
-  ctx.strokeStyle = "#e2e8f0";
-  ctx.lineWidth = 1;
-  for(let x = 20; x < 485; x += 12) {
-    ctx.moveTo(x, groundY);
-    ctx.lineTo(x - 4, groundY + 5);
-  }
-  ctx.stroke();
-
-  // 2. Vẽ cột Anten bằng nét đứt mờ đứng
-  ctx.beginPath();
-  ctx.setLineDash([4, 4]);
-  ctx.moveTo(startX, startY);
-  ctx.lineTo(startX, groundY);
-  ctx.strokeStyle = "#94a3b8";
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  ctx.setLineDash([]);
-  
-  // Ký hiệu khối Anten ở đỉnh
-  ctx.fillStyle = "#1a3a5c";
-  ctx.fillRect(startX - 6, startY - 14, 12, 14);
-  ctx.beginPath();
-  ctx.arc(startX, startY - 14, 3, 0, 2 * Math.PI);
-  ctx.fill();
-  
-  // Hiển thị nhãn chiều cao H
-  ctx.fillStyle = "#475569";
-  ctx.font = "bold 12px system-ui, -apple-system";
-  ctx.textAlign = "right";
-  ctx.fillText("H = " + h + "m", startX - 12, startY + antennaHeightPx/2 + 4);
-
-  // 3. Giả lập tỷ lệ trực quan cho búp sóng
-  let hasNear = (rNearVal !== "Over horizon");
-  let hasCenter = (rCenterVal !== "Over horizon");
-  let hasFar = (rFarVal !== "Over horizon");
-
-  let targetNearX = hasNear ? 150 : 450;
-  let targetCenterX = hasCenter ? 270 : 465;
-  let targetFarX = hasFar ? 410 : 480;
-  
-  // Tô bóng búp sóng trong suốt nhẹ
-  ctx.beginPath();
-  ctx.moveTo(startX, startY);
-  ctx.lineTo(targetFarX, hasFar ? groundY : groundY - 35);
-  ctx.lineTo(targetNearX, hasNear ? groundY : groundY);
-  ctx.closePath();
-  ctx.fillStyle = "rgba(26, 58, 92, 0.07)";
-  ctx.fill();
-  
-  // Vẽ tia búp sóng rìa gần (Near)
-  ctx.beginPath();
-  ctx.moveTo(startX, startY);
-  ctx.lineTo(targetNearX, hasNear ? groundY : groundY);
-  ctx.strokeStyle = "#0284c7";
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  
-  // Vẽ tia Tâm (Center) nét đứt gạch chấm gạch
-  ctx.beginPath();
-  ctx.setLineDash([6, 3, 2, 3]);
-  ctx.moveTo(startX, startY);
-  ctx.lineTo(targetCenterX, hasCenter ? groundY : groundY - 18);
-  ctx.strokeStyle = "#16a34a";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // Vẽ tia búp sóng rìa xa (Far)
-  ctx.beginPath();
-  ctx.moveTo(startX, startY);
-  ctx.lineTo(targetFarX, hasFar ? groundY : groundY - 35);
-  ctx.strokeStyle = "#ea580c";
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  // 4. In các nhãn văn bản chữ hiển thị rõ nét
-  ctx.font = "11px system-ui, -apple-system";
-  ctx.textAlign = "center";
-  
-  if(hasNear) {
-    ctx.fillStyle = "#0284c7";
-    ctx.beginPath(); ctx.arc(targetNearX, groundY, 4, 0, 2*Math.PI); ctx.fill();
-    ctx.fillText("R_near", targetNearX, groundY + 16);
-    ctx.font = "bold 11px system-ui";
-    ctx.fillText(rNearVal, targetNearX, groundY + 30);
-  } else {
-    ctx.fillStyle = "#94a3b8";
-    ctx.fillText("R_near: " + rNearVal, targetNearX - 35, groundY + 16);
-  }
-
-  ctx.font = "11px system-ui, -apple-system";
-  if(hasCenter) {
-    ctx.fillStyle = "#16a34a";
-    ctx.beginPath(); ctx.arc(targetCenterX, groundY, 4, 0, 2*Math.PI); ctx.fill();
-    ctx.fillText("R_center", targetCenterX, groundY + 16);
-    ctx.font = "bold 11px system-ui";
-    ctx.fillText(rCenterVal, targetCenterX, groundY + 30);
-  } else {
-    ctx.fillStyle = "#94a3b8";
-    ctx.fillText("R_center: " + rCenterVal, targetCenterX - 15, groundY - 10);
-  }
-
-  ctx.font = "11px system-ui, -apple-system";
-  if(hasFar) {
-    ctx.fillStyle = "#ea580c";
-    ctx.beginPath(); ctx.arc(targetFarX, groundY, 4, 0, 2*Math.PI); ctx.fill();
-    ctx.fillText("R_far", targetFarX, groundY + 16);
-    ctx.font = "bold 11px system-ui";
-    ctx.fillText(rFarVal, targetFarX, groundY + 30);
-  } else {
-    ctx.fillStyle = "#ea580c";
-    ctx.fillText("R_far: " + rFarVal, targetFarX - 25, groundY - 40);
-  }
-  
-  // Thông số góc Tilt & BW nhỏ trên góc
-  ctx.fillStyle = "#475569";
-  ctx.font = "11px system-ui, -apple-system";
-  ctx.textAlign = "left";
-  ctx.fillText("Tilt: " + tilt + "° (BW: " + bw + "°)", startX + 15, startY + 5);
-}
+['tilt-h','tilt-bw','tilt-alpha'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('keydown', e => { if (e.key==='Enter') calcTilt(); });
+});
 
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 

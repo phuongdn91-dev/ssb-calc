@@ -1,7 +1,7 @@
 {
   "name": "RF Tools",
   "short_name": "RF Tools",
-  "description": "Công cụ tính toán RF đa năng",
+  "description": "Chuy\u1ec3n \u0111\u1ed5i GSCN / NRARFCN / F_SSB cho 5G NR",
   "start_url": "/ssb-calc/index.html",
   "scope": "/ssb-calc/",
   "display": "standalone",
@@ -9,7 +9,17 @@
   "theme_color": "#1a3a5c",
   "lang": "vi",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }
