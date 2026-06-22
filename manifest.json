@@ -1,7 +1,7 @@
 {
-  "name": "5G SSB Calculator",
-  "short_name": "SSB Calc",
-  "description": "Chuyển đổi GSCN / NRARFCN / F_SSB cho 5G NR",
+  "name": "RF Tools",
+  "short_name": "RF Tools",
+  "description": "Công cụ tính toán RF đa năng",
   "start_url": "/ssb-calc/index.html",
   "scope": "/ssb-calc/",
   "display": "standalone",

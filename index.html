@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="RF Calc">
+<meta name="apple-mobile-web-app-title" content="RF Tools">
 <meta name="theme-color" content="#1a3a5c">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<title>RF Frequency Calculator</title>
+<title>RF Tools</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;font-size:15px;background:#f0f2f5;color:#1a1a1a;min-height:100vh}
@@ -92,8 +92,8 @@ footer a{color:#1a3a5c;text-decoration:none}
 
 <header>
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-  <h1>RF Frequency Calculator</h1>
-  <div class="sub">5G · 4G · LTE</div>
+  <h1>RF Tools</h1>
+  <div class="sub">5G · 4G · dBm · Tilt</div>
 </header>
 
 <div class="container">
@@ -110,9 +110,11 @@ footer a{color:#1a3a5c;text-decoration:none}
   </div>
 
   <!-- Tech switcher -->
-  <div class="tech-switch">
-    <button class="tech-btn active" onclick="switchTech('5g')">📡 5G NR</button>
-    <button class="tech-btn" onclick="switchTech('4g')">📶 4G LTE</button>
+  <div class="tech-switch" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; background: #ddd; border: none; border-radius: 10px; overflow: hidden; margin-bottom: 16px;">
+    <button class="tech-btn active" id="btn-tech-5g" onclick="switchTech('5g')" style="border: none; border-radius: 0; padding: 10px 5px; font-size: 13px;">📡 5G NR</button>
+    <button class="tech-btn" id="btn-tech-4g" onclick="switchTech('4g')" style="border: none; border-radius: 0; padding: 10px 5px; font-size: 13px;">📶 4G LTE</button>
+    <button class="tech-btn" id="btn-tech-dbm" onclick="switchTech('dbm')" style="border: none; border-radius: 0; padding: 10px 5px; font-size: 13px;">📊 dBm ↔ W</button>
+    <button class="tech-btn" id="btn-tech-tilt" onclick="switchTech('tilt')" style="border: none; border-radius: 0; padding: 10px 5px; font-size: 13px;">📐 Tilt & Radius</button>
   </div>
 
   <!-- 5G section -->
@@ -395,7 +397,79 @@ footer a{color:#1a3a5c;text-decoration:none}
       <div style="margin-top:8px;background:#f5f5f5;border-radius:8px;padding:10px 14px;font-family:monospace;font-size:12px;color:#444;line-height:1.8" id="eci-res-bin">—</div>
     </div>
   </div>
+  
   </div><!-- /tech-4g -->
+
+  <!-- dBm section -->
+  <div id="tech-tech-dbm" class="tech-section" style="display:none">
+    <div class="card">
+      <div class="card-title">Chuyển đổi dBm ↔ Watts</div>
+      <div class="modes">
+        <button class="mode-btn active" id="dbm-btn-to-w" onclick="setDbmMode('to-w')">dBm → Watts / mW</button>
+        <button class="mode-btn" id="dbm-btn-to-dbm" onclick="setDbmMode('to-dbm')">Watts → dBm</button>
+      </div>
+
+      <div id="dbm-mode-to-w" class="tab-panel active">
+        <div class="input-row">
+          <div class="input-group">
+            <label for="inp-dbm-val">Mức công suất (dBm)</label>
+            <input type="number" id="inp-dbm-val" placeholder="Ví dụ: 43, 46, 30" step="any" inputmode="decimal">
+          </div>
+          <button class="calc-btn" onclick="calcDbmToW()">Tính</button>
+        </div>
+      </div>
+
+      <div id="dbm-mode-to-dbm" class="tab-panel" style="display:none">
+        <div class="input-row">
+          <div class="input-group">
+            <label for="inp-w-val">Công suất (Watts)</label>
+            <input type="number" id="inp-w-val" placeholder="Ví dụ: 20, 40, 1" step="any" min="0.000001" inputmode="decimal">
+          </div>
+          <button class="calc-btn" onclick="calcWToDbm()">Tính</button>
+        </div>
+      </div>
+
+      <div class="results" id="dbm-results" style="display:none; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px;">
+        <div class="result-card"><div class="result-label">dBm</div><div class="result-value" id="res-dbm-dbm">—</div></div>
+        <div class="result-card"><div class="result-label">Watts (W)</div><div class="result-value" id="res-dbm-w">—</div></div>
+        <div class="result-card"><div class="result-label">Milliwatts (mW)</div><div class="result-value" id="res-dbm-mw">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tilt to Radius section -->
+  <div id="tech-tech-tilt" class="tech-section" style="display:none">
+    <div class="card">
+      <div class="card-title">Tính Bán kính phủ sóng từ độ nghiêng (Tilt)</div>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div class="input-group">
+          <label for="tilt-inp-h">Chiều cao Anten H (mét)</label>
+          <input type="number" id="tilt-inp-h" placeholder="Ví dụ: 30" step="any" min="1">
+        </div>
+        <div class="input-group">
+          <label for="tilt-inp-bw">Độ mở đứng búp sóng Vertical Beamwidth (°)</label>
+          <input type="number" id="tilt-inp-bw" placeholder="Ví dụ: 7, 6.5" step="any" min="0.1">
+        </div>
+        <div class="input-group">
+          <label for="tilt-inp-tilt">Tổng góc nghiêng Tilt (Cơ + Điện) (°)</label>
+          <input type="number" id="tilt-inp-tilt" placeholder="Ví dụ: 6, 8" step="any">
+        </div>
+        <button class="calc-btn" style="width: 100%; margin-top: 6px;" onclick="calcTiltToRadius()">Tính toán bán kính</button>
+      </div>
+      <div class="error-msg" id="tilt-err">⚠ Góc nghiêng phải lớn hơn nửa độ rộng búp sóng (Tilt > BW/2) để chạm đất.</div>
+
+      <div class="results" id="tilt-results" style="display:none; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px;">
+        <div class="result-card" style="grid-column: span 2;"><div class="result-label">Khoảng cách trung tâm (R_center)</div><div class="result-value" id="res-tilt-center" style="color: #2e7d32;">—</div></div>
+        <div class="result-card"><div class="result-label">Rìa gần (R_near)</div><div class="result-value" id="res-tilt-near">—</div></div>
+        <div class="result-card"><div class="result-label">Rìa xa (R_far)</div><div class="result-value" id="res-tilt-far">—</div></div>
+      </div>
+      <!-- Sơ Đồ Đồ Họa Cực Nét (High-DPI Fix) -->
+      <div id="tilt-canvas-container" style="display:none; margin-top: 14px; text-align: center; background: #fff; border-radius: 8px; padding: 12px; border: 1px solid #e2e8f0;">
+        <canvas id="tiltCanvas" style="width: 100%; max-width: 500px; height: auto; display: block; margin: 0 auto;"></canvas>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Deploy guide -->
   <div class="card">
@@ -730,6 +804,253 @@ function calcEciEncode() {
   if (!el) return;
   el.addEventListener('keydown', e => { if (e.key === 'Enter') calcEciEncode(); });
 });
+
+
+// Hàm switchTech cải tiến cho 4 module
+function switchTech(tech) {
+  document.querySelectorAll('.tech-section').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tech-btn').forEach(el => el.classList.remove('active'));
+  
+  if (tech === '5g') {
+    document.getElementById('tech-5g').style.display = 'block';
+    document.getElementById('btn-tech-5g').classList.add('active');
+  } else if (tech === '4g') {
+    document.getElementById('tech-4g').style.display = 'block';
+    document.getElementById('btn-tech-4g').classList.add('active');
+  } else if (tech === 'dbm') {
+    document.getElementById('tech-tech-dbm').style.display = 'block';
+    document.getElementById('btn-tech-dbm').classList.add('active');
+  } else if (tech === 'tilt') {
+    document.getElementById('tech-tech-tilt').style.display = 'block';
+    document.getElementById('btn-tech-tilt').classList.add('active');
+  }
+}
+
+// Logic cho module dBm
+function setDbmMode(mode) {
+  if (mode === 'to-w') {
+    document.getElementById('dbm-mode-to-w').style.display = 'block';
+    document.getElementById('dbm-mode-to-dbm').style.display = 'none';
+    document.getElementById('dbm-btn-to-w').classList.add('active');
+    document.getElementById('dbm-btn-to-dbm').classList.remove('active');
+  } else {
+    document.getElementById('dbm-mode-to-w').style.display = 'none';
+    document.getElementById('dbm-mode-to-dbm').style.display = 'block';
+    document.getElementById('dbm-btn-to-w').classList.remove('active');
+    document.getElementById('dbm-btn-to-dbm').classList.add('active');
+  }
+}
+
+function calcDbmToW() {
+  const dbm = parseFloat(document.getElementById('inp-dbm-val').value);
+  if (isNaN(dbm)) return;
+  const w = Math.pow(10, (dbm - 30) / 10);
+  const mw = Math.pow(10, dbm / 10);
+  
+  document.getElementById('res-dbm-dbm').innerText = dbm + " dBm";
+  document.getElementById('res-dbm-w').innerText = w >= 0.01 ? w.toFixed(3) + " W" : w.toExponential(3) + " W";
+  document.getElementById('res-dbm-mw').innerText = mw.toLocaleString('vi-VN', {maximumFractionDigits: 2}) + " mW";
+  document.getElementById('dbm-results').style.display = 'grid';
+}
+
+function calcWToDbm() {
+  const w = parseFloat(document.getElementById('inp-w-val').value);
+  if (isNaN(w) || w <= 0) return;
+  const dbm = 10 * Math.log10(w) + 30;
+  const mw = w * 1000;
+  
+  document.getElementById('res-dbm-dbm').innerText = dbm.toFixed(2) + " dBm";
+  document.getElementById('res-dbm-w').innerText = w + " W";
+  document.getElementById('res-dbm-mw').innerText = mw.toLocaleString('vi-VN', {maximumFractionDigits: 2}) + " mW";
+  document.getElementById('dbm-results').style.display = 'grid';
+}
+
+// Logic cho module Tilt to Radius
+function calcTiltToRadius() {
+  const h = parseFloat(document.getElementById('tilt-inp-h').value);
+  const bw = parseFloat(document.getElementById('tilt-inp-bw').value);
+  const tilt = parseFloat(document.getElementById('tilt-inp-tilt').value);
+  const errEl = document.getElementById('tilt-err');
+  const resEl = document.getElementById('tilt-results');
+  
+  if (isNaN(h) || isNaN(bw) || isNaN(tilt) || h <= 0 || bw <= 0) return;
+  
+  if (errEl) errEl.style.display = 'none';
+  
+  const rad = Math.PI / 180;
+  
+  // Tính toán kèm cơ chế fallback Over horizon
+  let rCenter = (tilt > 0) ? (h / Math.tan(tilt * rad)).toFixed(1) + " m" : "Over horizon";
+  let rNear = ((tilt + bw / 2) > 0) ? (h / Math.tan((tilt + bw / 2) * rad)).toFixed(1) + " m" : "Over horizon";
+  let rFar = ((tilt - bw / 2) > 0) ? (h / Math.tan((tilt - bw / 2) * rad)).toFixed(1) + " m" : "Over horizon";
+  
+  document.getElementById('res-tilt-center').innerText = rCenter;
+  document.getElementById('res-tilt-near').innerText = rNear;
+  document.getElementById('res-tilt-far').innerText = rFar;
+  resEl.style.display = 'grid';
+  
+  // Vẽ đồ thị tự động siêu nét
+  drawTiltDiagram(h, bw, tilt, rCenter, rNear, rFar);
+}
+
+function drawTiltDiagram(h, bw, tilt, rCenterVal, rNearVal, rFarVal) {
+  const canvas = document.getElementById('tiltCanvas');
+  const ctx = canvas.getContext('2d');
+  const container = document.getElementById('tilt-canvas-container');
+  container.style.display = 'block';
+  
+  // Sửa lỗi mờ bằng giải pháp High-DPI / Retina Canvas
+  const dpr = window.devicePixelRatio || 1;
+  const logicalWidth = 500;
+  const logicalHeight = 280;
+  
+  canvas.style.width = logicalWidth + "px";
+  canvas.style.height = logicalHeight + "px";
+  canvas.width = logicalWidth * dpr;
+  canvas.height = logicalHeight * dpr;
+  
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.scale(dpr, dpr);
+  
+  // Vẽ nền trắng mịn
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, logicalWidth, logicalHeight);
+  
+  const startX = 65;
+  const startY = 45;
+  const groundY = 225;
+  const antennaHeightPx = groundY - startY;
+  
+  // 1. Vẽ mặt đất nằm ngang
+  ctx.beginPath();
+  ctx.moveTo(15, groundY);
+  ctx.lineTo(485, groundY);
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#475569";
+  ctx.stroke();
+  
+  // Gạch mặt đất kỹ thuật sắc nét
+  ctx.beginPath();
+  ctx.strokeStyle = "#e2e8f0";
+  ctx.lineWidth = 1;
+  for(let x = 20; x < 485; x += 12) {
+    ctx.moveTo(x, groundY);
+    ctx.lineTo(x - 4, groundY + 5);
+  }
+  ctx.stroke();
+
+  // 2. Vẽ cột Anten bằng nét đứt mờ đứng
+  ctx.beginPath();
+  ctx.setLineDash([4, 4]);
+  ctx.moveTo(startX, startY);
+  ctx.lineTo(startX, groundY);
+  ctx.strokeStyle = "#94a3b8";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.setLineDash([]);
+  
+  // Ký hiệu khối Anten ở đỉnh
+  ctx.fillStyle = "#1a3a5c";
+  ctx.fillRect(startX - 6, startY - 14, 12, 14);
+  ctx.beginPath();
+  ctx.arc(startX, startY - 14, 3, 0, 2 * Math.PI);
+  ctx.fill();
+  
+  // Hiển thị nhãn chiều cao H
+  ctx.fillStyle = "#475569";
+  ctx.font = "bold 12px system-ui, -apple-system";
+  ctx.textAlign = "right";
+  ctx.fillText("H = " + h + "m", startX - 12, startY + antennaHeightPx/2 + 4);
+
+  // 3. Giả lập tỷ lệ trực quan cho búp sóng
+  let hasNear = (rNearVal !== "Over horizon");
+  let hasCenter = (rCenterVal !== "Over horizon");
+  let hasFar = (rFarVal !== "Over horizon");
+
+  let targetNearX = hasNear ? 150 : 450;
+  let targetCenterX = hasCenter ? 270 : 465;
+  let targetFarX = hasFar ? 410 : 480;
+  
+  // Tô bóng búp sóng trong suốt nhẹ
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.lineTo(targetFarX, hasFar ? groundY : groundY - 35);
+  ctx.lineTo(targetNearX, hasNear ? groundY : groundY);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(26, 58, 92, 0.07)";
+  ctx.fill();
+  
+  // Vẽ tia búp sóng rìa gần (Near)
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.lineTo(targetNearX, hasNear ? groundY : groundY);
+  ctx.strokeStyle = "#0284c7";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  
+  // Vẽ tia Tâm (Center) nét đứt gạch chấm gạch
+  ctx.beginPath();
+  ctx.setLineDash([6, 3, 2, 3]);
+  ctx.moveTo(startX, startY);
+  ctx.lineTo(targetCenterX, hasCenter ? groundY : groundY - 18);
+  ctx.strokeStyle = "#16a34a";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Vẽ tia búp sóng rìa xa (Far)
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.lineTo(targetFarX, hasFar ? groundY : groundY - 35);
+  ctx.strokeStyle = "#ea580c";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 4. In các nhãn văn bản chữ hiển thị rõ nét
+  ctx.font = "11px system-ui, -apple-system";
+  ctx.textAlign = "center";
+  
+  if(hasNear) {
+    ctx.fillStyle = "#0284c7";
+    ctx.beginPath(); ctx.arc(targetNearX, groundY, 4, 0, 2*Math.PI); ctx.fill();
+    ctx.fillText("R_near", targetNearX, groundY + 16);
+    ctx.font = "bold 11px system-ui";
+    ctx.fillText(rNearVal, targetNearX, groundY + 30);
+  } else {
+    ctx.fillStyle = "#94a3b8";
+    ctx.fillText("R_near: " + rNearVal, targetNearX - 35, groundY + 16);
+  }
+
+  ctx.font = "11px system-ui, -apple-system";
+  if(hasCenter) {
+    ctx.fillStyle = "#16a34a";
+    ctx.beginPath(); ctx.arc(targetCenterX, groundY, 4, 0, 2*Math.PI); ctx.fill();
+    ctx.fillText("R_center", targetCenterX, groundY + 16);
+    ctx.font = "bold 11px system-ui";
+    ctx.fillText(rCenterVal, targetCenterX, groundY + 30);
+  } else {
+    ctx.fillStyle = "#94a3b8";
+    ctx.fillText("R_center: " + rCenterVal, targetCenterX - 15, groundY - 10);
+  }
+
+  ctx.font = "11px system-ui, -apple-system";
+  if(hasFar) {
+    ctx.fillStyle = "#ea580c";
+    ctx.beginPath(); ctx.arc(targetFarX, groundY, 4, 0, 2*Math.PI); ctx.fill();
+    ctx.fillText("R_far", targetFarX, groundY + 16);
+    ctx.font = "bold 11px system-ui";
+    ctx.fillText(rFarVal, targetFarX, groundY + 30);
+  } else {
+    ctx.fillStyle = "#ea580c";
+    ctx.fillText("R_far: " + rFarVal, targetFarX - 25, groundY - 40);
+  }
+  
+  // Thông số góc Tilt & BW nhỏ trên góc
+  ctx.fillStyle = "#475569";
+  ctx.font = "11px system-ui, -apple-system";
+  ctx.textAlign = "left";
+  ctx.fillText("Tilt: " + tilt + "° (BW: " + bw + "°)", startX + 15, startY + 5);
+}
 
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 
