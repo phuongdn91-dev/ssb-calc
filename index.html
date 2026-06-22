@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="SSB Calc">
+<meta name="apple-mobile-web-app-title" content="RF Calc">
 <meta name="theme-color" content="#1a3a5c">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<title>5G SSB Calculator</title>
+<title>RF Frequency Calculator</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;font-size:15px;background:#f0f2f5;color:#1a1a1a;min-height:100vh}
@@ -57,6 +57,16 @@ tr:last-child td{border-bottom:none}
 .formula-box{font-family:monospace;font-size:12px;background:#f5f5f5;padding:12px;border-radius:8px;line-height:2;overflow-x:auto}
 .fl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#888;margin:12px 0 6px}
 .fl:first-child{margin-top:0}
+/* tech switcher */
+.tech-switch{display:flex;gap:0;border:0.5px solid #ddd;border-radius:10px;overflow:hidden;margin-bottom:16px;background:#fff}
+.tech-btn{flex:1;padding:11px;font-size:14px;font-weight:600;border:none;cursor:pointer;background:#fff;color:#888;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;letter-spacing:.02em}
+.tech-btn.active{background:#1a3a5c;color:#fff}
+.tech-btn:not(:last-child){border-right:0.5px solid #ddd}
+.tech-section{display:none}
+.tech-section.active{display:block}
+/* 4G result - 4 cols */
+.results-4g{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+@media(min-width:600px){.results-4g{grid-template-columns:repeat(4,1fr)}}
 /* install banner */
 #install-banner{display:none;background:#e8f0fe;border:0.5px solid #b0c4f5;border-radius:10px;padding:12px 14px;margin-bottom:14px;align-items:center;gap:10px}
 #install-banner.show{display:flex}
@@ -82,8 +92,8 @@ footer a{color:#1a3a5c;text-decoration:none}
 
 <header>
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-  <h1>5G SSB Calculator</h1>
-  <div class="sub">GSCN · NRARFCN · F_SSB</div>
+  <h1>RF Frequency Calculator</h1>
+  <div class="sub">5G · 4G · LTE</div>
 </header>
 
 <div class="container">
@@ -99,6 +109,14 @@ footer a{color:#1a3a5c;text-decoration:none}
     <button class="close-btn" onclick="this.parentElement.style.display='none';localStorage.setItem('ios-hint-dismissed','1')">×</button>
   </div>
 
+  <!-- Tech switcher -->
+  <div class="tech-switch">
+    <button class="tech-btn active" onclick="switchTech('5g')">📡 5G NR</button>
+    <button class="tech-btn" onclick="switchTech('4g')">📶 4G LTE</button>
+  </div>
+
+  <!-- 5G section -->
+  <div id="tech-5g" class="tech-section active">
   <!-- Calculator -->
   <div class="card">
     <div class="card-title">Chuyển đổi</div>
@@ -180,6 +198,205 @@ footer a{color:#1a3a5c;text-decoration:none}
     </div>
   </div>
 
+
+  <!-- NCI Calculator -->
+  <div class="card">
+    <div class="card-title">NR Cell Identity (NCI) Calculator</div>
+    <div class="modes" style="margin-bottom:14px">
+      <button class="mode-btn active" id="nci-btn-decode" onclick="setNciMode('decode')">NCI → gNB / CI</button>
+      <button class="mode-btn" id="nci-btn-encode" onclick="setNciMode('encode')">gNB + CI → NCI</button>
+    </div>
+
+    <!-- decode: NCI → gNB + CI -->
+    <div id="nci-mode-decode" class="tab-panel active">
+      <div style="display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:flex-end;flex-wrap:wrap">
+        <div class="input-group">
+          <label for="nci-inp-nci">NCI (36-bit, decimal hoặc hex 0x…)</label>
+          <input type="text" id="nci-inp-nci" placeholder="Ví dụ: 12345678 hoặc 0xBC614E" inputmode="numeric">
+        </div>
+        <div class="input-group" style="max-width:110px">
+          <label for="nci-gnb-len">gNBIdLength</label>
+          <select id="nci-gnb-len" style="padding:11px 10px;border:0.5px solid #ccc;border-radius:8px;font-size:14px;background:#fafafa;outline:none">
+            <option value="22">22 bit</option>
+            <option value="23">23 bit</option>
+            <option value="24">24 bit</option>
+            <option value="25">25 bit</option>
+            <option value="26">26 bit</option>
+            <option value="27">27 bit</option>
+            <option value="28">28 bit</option>
+            <option value="29">29 bit</option>
+            <option value="30">30 bit</option>
+            <option value="32" selected>32 bit</option>
+          </select>
+        </div>
+        <button class="calc-btn" onclick="calcNciDecode()">Tính</button>
+      </div>
+      <div class="error-msg" id="nci-err-decode">⚠ NCI không hợp lệ (max 36-bit = 68 719 476 735).</div>
+    </div>
+
+    <!-- encode: gNB + CI → NCI -->
+    <div id="nci-mode-encode" class="tab-panel">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:10px;align-items:flex-end;flex-wrap:wrap">
+        <div class="input-group">
+          <label for="nci-inp-gnb">gNB ID</label>
+          <input type="number" id="nci-inp-gnb" placeholder="Ví dụ: 12345" min="0" inputmode="numeric">
+        </div>
+        <div class="input-group">
+          <label for="nci-inp-ci">Cell ID (CI)</label>
+          <input type="number" id="nci-inp-ci" placeholder="Ví dụ: 67" min="0" inputmode="numeric">
+        </div>
+        <div class="input-group" style="max-width:110px">
+          <label for="nci-gnb-len2">gNBIdLength</label>
+          <select id="nci-gnb-len2" style="padding:11px 10px;border:0.5px solid #ccc;border-radius:8px;font-size:14px;background:#fafafa;outline:none">
+            <option value="22">22 bit</option>
+            <option value="23">23 bit</option>
+            <option value="24">24 bit</option>
+            <option value="25">25 bit</option>
+            <option value="26">26 bit</option>
+            <option value="27">27 bit</option>
+            <option value="28">28 bit</option>
+            <option value="29">29 bit</option>
+            <option value="30">30 bit</option>
+            <option value="32" selected>32 bit</option>
+          </select>
+        </div>
+        <button class="calc-btn" onclick="calcNciEncode()">Tính</button>
+      </div>
+      <div class="error-msg" id="nci-err-encode">⚠ gNB ID hoặc CI vượt quá giới hạn bit.</div>
+    </div>
+
+    <!-- Results -->
+    <div id="nci-results" style="display:none;margin-top:14px">
+      <div class="results" style="grid-template-columns:repeat(2,1fr)">
+        <div class="result-card"><div class="result-label">NCI (decimal)</div><div class="result-value sm" id="nci-res-nci-dec">—</div></div>
+        <div class="result-card"><div class="result-label">NCI (hex)</div><div class="result-value sm" id="nci-res-nci-hex">—</div></div>
+        <div class="result-card"><div class="result-label">gNB ID</div><div class="result-value" id="nci-res-gnb">—</div></div>
+        <div class="result-card"><div class="result-label">Cell ID (CI)</div><div class="result-value" id="nci-res-ci">—</div></div>
+        <div class="result-card"><div class="result-label">gNBIdLength</div><div class="result-value" id="nci-res-len">—</div></div>
+        <div class="result-card"><div class="result-label">CI bit width</div><div class="result-value" id="nci-res-cibits">—</div></div>
+      </div>
+      <div style="margin-top:10px;background:#eef4ff;border:0.5px solid #c8daea;border-radius:8px;padding:10px 14px;font-family:monospace;font-size:12px;color:#1a3a5c;line-height:2" id="nci-res-formula">—</div>
+      <div style="margin-top:8px;background:#f5f5f5;border-radius:8px;padding:10px 14px;font-family:monospace;font-size:12px;color:#444;line-height:1.8" id="nci-res-bin">—</div>
+    </div>
+  </div>
+  </div><!-- /tech-5g -->
+
+  <!-- 4G section -->
+  <div id="tech-4g" class="tech-section">
+  <div class="card">
+    <div class="card-title">Chuyển đổi 4G LTE</div>
+    <div class="modes">
+      <button class="mode-btn active" id="lte-btn-freq" onclick="setLteMode('freq')">MHz → EARFCN</button>
+      <button class="mode-btn" id="lte-btn-earfcn" onclick="setLteMode('earfcn')">EARFCN → MHz</button>
+    </div>
+
+    <div id="lte-mode-freq" class="tab-panel active">
+      <div class="input-row">
+        <div class="input-group">
+          <label for="lte-inp-freq">Tần số DL (MHz)</label>
+          <input type="number" id="lte-inp-freq" placeholder="Ví dụ: 1815, 2140, 2650" step="0.1" min="0" inputmode="decimal">
+          <div class="hint">Nhập tần số downlink của sóng mang LTE</div>
+        </div>
+        <button class="calc-btn" onclick="calcLteFromFreq()">Tính</button>
+      </div>
+      <div class="error-msg" id="lte-err-freq">⚠ Tần số ngoài dải LTE đã định nghĩa.</div>
+    </div>
+
+    <div id="lte-mode-earfcn" class="tab-panel">
+      <div class="input-row">
+        <div class="input-group">
+          <label for="lte-inp-earfcn">EARFCN (DL)</label>
+          <input type="number" id="lte-inp-earfcn" placeholder="Ví dụ: 1300, 3350, 38050" step="1" min="0" inputmode="numeric">
+        </div>
+        <button class="calc-btn" onclick="calcLteFromEarfcn()">Tính</button>
+      </div>
+      <div class="error-msg" id="lte-err-earfcn">⚠ EARFCN không hợp lệ hoặc ngoài dải.</div>
+    </div>
+
+    <div class="results-4g" id="lte-results" style="display:none">
+      <div class="result-card"><div class="result-label">F_DL (MHz)</div><div class="result-value" id="lte-res-fdl">—</div></div>
+      <div class="result-card"><div class="result-label">F_UL thấp (MHz)</div><div class="result-value" id="lte-res-ful">—</div></div>
+      <div class="result-card"><div class="result-label">F_UL cao (MHz)</div><div class="result-value" id="lte-res-ful-hi">—</div></div>
+      <div class="result-card"><div class="result-label">EARFCN DL</div><div class="result-value" id="lte-res-earfcn-dl">—</div></div>
+      <div class="result-card"><div class="result-label">EARFCN UL</div><div class="result-value" id="lte-res-earfcn-ul">—</div></div>
+      <div class="result-card"><div class="result-label">LTE Band</div><div class="result-value sm" id="lte-res-band">—</div></div>
+      <div class="result-card" style="grid-column:span 2"><div class="result-label">Tên băng tần</div><div class="result-value sm" id="lte-res-bandname">—</div></div>
+    </div>
+  </div>
+
+  <!-- 4G reference tables -->
+  <div class="card">
+    <div class="tabs">
+      <div class="tab active" data-panel="lte-band-table" onclick="switchLteTab(this)">Băng tần LTE</div>
+      <div class="tab" data-panel="lte-formula-ref" onclick="switchLteTab(this)">Công thức</div>
+    </div>
+    <div id="lte-band-table" class="tab-panel active">
+      <div class="table-wrap"><table>
+        <thead><tr><th>Band</th><th>F_DL thấp</th><th>F_DL cao</th><th>N_Offs_DL</th><th>F_UL thấp</th><th>F_UL cao</th><th>N_Offs_UL</th><th>Duplex</th><th>Tên</th></tr></thead>
+        <tbody id="lte-band-tbody"></tbody>
+      </table></div>
+    </div>
+    <div id="lte-formula-ref" class="tab-panel">
+      <div class="fl">EARFCN → Tần số DL (MHz)</div>
+      <div class="formula-box">F_DL = F_DL_low + 0.1 × (N_DL − N_Offs_DL)</div>
+      <div class="fl">EARFCN → Tần số UL (MHz)</div>
+      <div class="formula-box">F_UL = F_UL_low + 0.1 × (N_UL − N_Offs_UL)<br>N_UL = N_DL − 18 000 &nbsp;(FDD bands thông thường)</div>
+      <div class="fl">Tần số DL → EARFCN</div>
+      <div class="formula-box">N_DL = N_Offs_DL + round((F_DL − F_DL_low) / 0.1)</div>
+    </div>
+  </div>
+
+  <!-- ECI Calculator -->
+  <div class="card">
+    <div class="card-title">E-UTRAN Cell Identity (ECI) Calculator</div>
+    <div class="modes" style="margin-bottom:14px">
+      <button class="mode-btn active" id="eci-btn-decode" onclick="setEciMode('decode')">ECI → eNB / LCId</button>
+      <button class="mode-btn" id="eci-btn-encode" onclick="setEciMode('encode')">eNB + LCId → ECI</button>
+    </div>
+
+    <!-- decode -->
+    <div id="eci-mode-decode" class="tab-panel active">
+      <div class="input-row">
+        <div class="input-group">
+          <label for="eci-inp-eci">ECI (28-bit, decimal hoặc hex 0x…)</label>
+          <input type="text" id="eci-inp-eci" placeholder="Ví dụ: 1179657 hoặc 0x1200009" inputmode="numeric">
+        </div>
+        <button class="calc-btn" onclick="calcEciDecode()">Tính</button>
+      </div>
+      <div class="error-msg" id="eci-err-decode">⚠ ECI không hợp lệ (max 28-bit = 268 435 455).</div>
+    </div>
+
+    <!-- encode -->
+    <div id="eci-mode-encode" class="tab-panel">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:flex-end;flex-wrap:wrap">
+        <div class="input-group">
+          <label for="eci-inp-enb">eNB ID</label>
+          <input type="number" id="eci-inp-enb" placeholder="Ví dụ: 18432" min="0" inputmode="numeric">
+        </div>
+        <div class="input-group">
+          <label for="eci-inp-lcid">Local Cell ID (LCId)</label>
+          <input type="number" id="eci-inp-lcid" placeholder="Ví dụ: 9 (0–255)" min="0" max="255" inputmode="numeric">
+        </div>
+        <button class="calc-btn" onclick="calcEciEncode()">Tính</button>
+      </div>
+      <div class="hint" style="margin-top:6px">ECI = 28-bit = eNB ID (20-bit) | LCId (8-bit). eNB ID tối đa 1 048 575.</div>
+      <div class="error-msg" id="eci-err-encode">⚠ eNB ID (max 1 048 575) hoặc LCId (max 255) vượt giới hạn.</div>
+    </div>
+
+    <!-- Results -->
+    <div id="eci-results" style="display:none;margin-top:14px">
+      <div class="results" style="grid-template-columns:repeat(2,1fr)">
+        <div class="result-card"><div class="result-label">ECI (decimal)</div><div class="result-value sm" id="eci-res-eci-dec">—</div></div>
+        <div class="result-card"><div class="result-label">ECI (hex)</div><div class="result-value sm" id="eci-res-eci-hex">—</div></div>
+        <div class="result-card"><div class="result-label">eNB ID</div><div class="result-value" id="eci-res-enb">—</div></div>
+        <div class="result-card"><div class="result-label">Local Cell ID</div><div class="result-value" id="eci-res-lcid">—</div></div>
+      </div>
+      <div style="margin-top:10px;background:#eef4ff;border:0.5px solid #c8daea;border-radius:8px;padding:10px 14px;font-family:monospace;font-size:12px;color:#1a3a5c;line-height:2" id="eci-res-formula">—</div>
+      <div style="margin-top:8px;background:#f5f5f5;border-radius:8px;padding:10px 14px;font-family:monospace;font-size:12px;color:#444;line-height:1.8" id="eci-res-bin">—</div>
+    </div>
+  </div>
+  </div><!-- /tech-4g -->
+
   <!-- Deploy guide -->
   <div class="card">
     <div class="card-title">Hướng dẫn cài lên điện thoại</div>
@@ -203,9 +420,9 @@ footer a{color:#1a3a5c;text-decoration:none}
 </div>
 
 <footer>
-  <strong>5G SSB Calculator</strong> — v1.0<br>
+  <strong>RF Frequency Calculator</strong> — v1.1<br>
   Phát triển bởi <strong>Phương Lâm</strong> · VNPT-NET3<br>
-  Dữ liệu tham chiếu theo <strong>3GPP TS 38.104</strong><br>
+  Tham chiếu <strong>3GPP TS 38.104</strong> (5G NR) &amp; <strong>TS 36.101</strong> (LTE)<br>
   <span style="font-size:11px">© 2025 Phương Lâm. Dùng cho mục đích nội bộ.</span>
 </footer>
 
@@ -235,6 +452,284 @@ function switchTab(el){const p=el.dataset.panel;document.querySelectorAll('.tabs
   const gt=document.getElementById('gscn-tbody');
   Object.entries(SSB_RASTER).forEach(([band,{first,last,step}])=>{const c=Math.floor((last-first)/step)+1;gt.innerHTML+=`<tr><td><span class="badge b-blue">${band}</span></td><td>${first}</td><td>${last}</td><td>${step}</td><td>${c}</td></tr>`;});
 })();
+
+
+// ─── 4G LTE ───────────────────────────────────────────────────────────────────
+// [band, label, F_DL_low, F_DL_high, N_Offs_DL, F_UL_low, F_UL_high, N_Offs_UL, duplex, name]
+const LTE_BANDS = [
+  [1,  "B1",  2110, 2170, 0,      1920, 1980, 18000, "FDD", "N2100"],
+  [2,  "B2",  1930, 1990, 600,    1850, 1910, 18600, "FDD", "N1900"],
+  [3,  "B3",  1805, 1880, 1200,   1710, 1785, 19200, "FDD", "N1800"],
+  [4,  "B4",  2110, 2155, 1950,   1710, 1755, 19950, "FDD", "N1700/2100"],
+  [5,  "B5",  869,  894,  2400,   824,  849,  20400, "FDD", "N850"],
+  [7,  "B7",  2620, 2690, 2750,   2500, 2570, 20750, "FDD", "N2600"],
+  [8,  "B8",  925,  960,  3450,   880,  915,  21450, "FDD", "N900"],
+  [12, "B12", 729,  746,  5010,   699,  716,  23010, "FDD", "N700"],
+  [13, "B13", 746,  756,  5180,   777,  787,  23180, "FDD", "N700"],
+  [17, "B17", 734,  746,  5730,   704,  716,  23730, "FDD", "N700"],
+  [20, "B20", 791,  821,  6150,   832,  862,  24150, "FDD", "N800"],
+  [28, "B28", 758,  803,  9210,   703,  748,  27210, "FDD", "N700"],
+  [38, "B38", 2570, 2620, 37750,  2570, 2620, 37750, "TDD", "N2600"],
+  [40, "B40", 2300, 2400, 38650,  2300, 2400, 38650, "TDD", "N2300"],
+  [41, "B41", 2496, 2690, 39650,  2496, 2690, 39650, "TDD", "N2600"],
+  [42, "B42", 3400, 3600, 41590,  3400, 3600, 41590, "TDD", "N3500"],
+  [43, "B43", 3600, 3800, 43590,  3600, 3800, 43590, "TDD", "N3700"],
+];
+
+function earfcnToLteFreq(earfcn) {
+  for (const [,label,fdl_lo,fdl_hi,n_offs_dl,ful_lo,ful_hi,n_offs_ul,duplex,name] of LTE_BANDS) {
+    const n_dl_hi = n_offs_dl + Math.round((fdl_hi - fdl_lo) / 0.1);
+    if (earfcn >= n_offs_dl && earfcn <= n_dl_hi) {
+      const fdl = +(fdl_lo + 0.1 * (earfcn - n_offs_dl)).toFixed(3);
+      const n_ul = duplex === "FDD" ? earfcn - (n_offs_dl - n_offs_ul) : earfcn;
+      const ful_lo_val = +(ful_lo + 0.1 * (n_ul - n_offs_ul)).toFixed(3);
+      return { fdl, ful: ful_lo_val, ful_hi, n_ul, band: label, name, duplex };
+    }
+  }
+  return null;
+}
+
+function lteFreqToEarfcn(fdl) {
+  const results = [];
+  for (const [,label,fdl_lo,fdl_hi,n_offs_dl,ful_lo,ful_hi,n_offs_ul,duplex,name] of LTE_BANDS) {
+    if (fdl >= fdl_lo && fdl <= fdl_hi) {
+      const n_dl = n_offs_dl + Math.round((fdl - fdl_lo) / 0.1);
+      const n_ul = duplex === "FDD" ? n_dl - (n_offs_dl - n_offs_ul) : n_dl;
+      const ful = +(ful_lo + 0.1 * (n_ul - n_offs_ul)).toFixed(3);
+      results.push({ n_dl, n_ul, ful, ful_hi, band: label, name, duplex });
+    }
+  }
+  return results.length ? results : null;
+}
+
+function setLteMode(m) {
+  ['freq','earfcn'].forEach(id => {
+    document.getElementById('lte-mode-'+id).classList.toggle('active', id===m);
+    document.getElementById('lte-btn-'+id).classList.toggle('active', id===m);
+  });
+  document.getElementById('lte-results').style.display = 'none';
+  ['lte-err-freq','lte-err-earfcn'].forEach(id => document.getElementById(id).classList.remove('show'));
+}
+
+function showLteResults(fdl, ful, ful_hi, ndl, nul, band, name) {
+  const fmt = v => (v != null && !isNaN(+v)) ? (+v).toFixed(3) : String(v||'—');
+  document.getElementById('lte-res-fdl').textContent = fmt(fdl);
+  document.getElementById('lte-res-ful').textContent = fmt(ful);
+  document.getElementById('lte-res-ful-hi').textContent = fmt(ful_hi);
+  document.getElementById('lte-res-earfcn-dl').textContent = ndl ?? '—';
+  document.getElementById('lte-res-earfcn-ul').textContent = nul ?? '—';
+  document.getElementById('lte-res-band').textContent = band || '—';
+  document.getElementById('lte-res-bandname').textContent = name || '—';
+  document.getElementById('lte-results').style.display = 'grid';
+}
+
+function calcLteFromFreq() {
+  const v = parseFloat(document.getElementById('lte-inp-freq').value);
+  if (isNaN(v)) { showErr('lte-err-freq', true); return; }
+  const res = lteFreqToEarfcn(v);
+  if (!res) { showErr('lte-err-freq', true); document.getElementById('lte-results').style.display='none'; return; }
+  showErr('lte-err-freq', false);
+  const uniq = arr => [...new Set(arr)].join('/');
+  showLteResults(v, uniq(res.map(r=>r.ful)), uniq(res.map(r=>r.ful_hi)),
+    uniq(res.map(r=>r.n_dl)), uniq(res.map(r=>r.n_ul)),
+    uniq(res.map(r=>r.band)), uniq(res.map(r=>r.name)));
+}
+
+function calcLteFromEarfcn() {
+  const v = parseInt(document.getElementById('lte-inp-earfcn').value);
+  if (isNaN(v) || v < 0) { showErr('lte-err-earfcn', true); return; }
+  const res = earfcnToLteFreq(v);
+  if (!res) { showErr('lte-err-earfcn', true); document.getElementById('lte-results').style.display='none'; return; }
+  showErr('lte-err-earfcn', false);
+  showLteResults(res.fdl, res.ful, res.ful_hi, v, res.n_ul, res.band, res.name);
+}
+
+['lte-inp-freq','lte-inp-earfcn'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    if (id === 'lte-inp-freq') calcLteFromFreq(); else calcLteFromEarfcn();
+  });
+});
+
+function switchLteTab(el) {
+  const p = el.dataset.panel;
+  el.closest('.card').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#lte-band-table,#lte-formula-ref').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(p).classList.add('active');
+}
+
+function switchTech(t) {
+  document.querySelectorAll('.tech-btn').forEach((b,i) => b.classList.toggle('active', ['5g','4g'][i]===t));
+  document.querySelectorAll('.tech-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tech-'+t).classList.add('active');
+}
+
+// Build 4G band table
+(function buildLteBandTable() {
+  const tb = document.getElementById('lte-band-tbody');
+  LTE_BANDS.forEach(([, label, fdl_lo, fdl_hi, n_offs_dl, ful_lo, ful_hi, n_offs_ul, duplex, name]) => {
+    tb.innerHTML += `<tr>
+      <td><span class="badge b-blue">${label}</span></td>
+      <td>${fdl_lo}</td><td>${fdl_hi}</td><td style="color:#5a7090">${n_offs_dl}</td>
+      <td>${ful_lo}</td><td>${ful_hi}</td><td style="color:#5a7090">${n_offs_ul}</td>
+      <td><span class="badge ${duplex==='TDD'?'b-teal':'b-blue'}">${duplex}</span></td>
+      <td>${name}</td>
+    </tr>`;
+  });
+})();
+
+
+// ─── NCI Calculator (BigInt — 36-bit safe) ────────────────────────────────────
+// NCI = 36-bit: upper gNBIdLength bits = gNB ID, lower (36-gNBIdLength) bits = CI
+function setNciMode(m) {
+  ['decode','encode'].forEach(id => {
+    document.getElementById('nci-mode-'+id).classList.toggle('active', id===m);
+    document.getElementById('nci-btn-'+id).classList.toggle('active', id===m);
+  });
+  document.getElementById('nci-results').style.display = 'none';
+  ['nci-err-decode','nci-err-encode'].forEach(id => document.getElementById(id).classList.remove('show'));
+}
+
+function showNciResults(nci, gnbId, ci, gnbLen) {
+  // all BigInt inputs
+  const ciBits = 36n - gnbLen;
+  const nciHex = '0x' + nci.toString(16).toUpperCase().padStart(9, '0');
+  const gnbBin = gnbId.toString(2).padStart(Number(gnbLen), '0');
+  const ciBin  = ci.toString(2).padStart(Number(ciBits), '0');
+  document.getElementById('nci-res-nci-dec').textContent = nci.toString();
+  document.getElementById('nci-res-nci-hex').textContent = nciHex;
+  document.getElementById('nci-res-gnb').textContent = gnbId.toString();
+  document.getElementById('nci-res-ci').textContent = ci.toString();
+  document.getElementById('nci-res-len').textContent = gnbLen.toString() + ' bit';
+  document.getElementById('nci-res-cibits').textContent = ciBits.toString() + ' bit';
+  document.getElementById('nci-res-formula').innerHTML =
+    'NCI = gNB_ID &times; 2<sup>' + ciBits + '</sup> + CI<br>' +
+    '&nbsp;&nbsp;&nbsp;&nbsp;= ' + gnbId + ' &times; 2<sup>' + ciBits + '</sup> + ' + ci + '<br>' +
+    '&nbsp;&nbsp;&nbsp;&nbsp;= <strong>' + nci + '</strong>';
+  document.getElementById('nci-res-bin').innerHTML =
+    '<span style="color:#1a3a5c;font-weight:700">NCI (bin):</span> ' +
+    '<span style="color:#c0392b">' + gnbBin + '</span>' +
+    '<span style="color:#888"> | </span>' +
+    '<span style="color:#0a5c40">' + ciBin + '</span><br>' +
+    '<span style="color:#c0392b">&#9632; gNB ID</span> = ' + gnbLen + ' bit &nbsp;&nbsp;' +
+    '<span style="color:#0a5c40">&#9632; CI</span> = ' + ciBits + ' bit';
+  document.getElementById('nci-results').style.display = 'block';
+}
+
+function calcNciDecode() {
+  const raw = document.getElementById('nci-inp-nci').value.trim();
+  const gnbLen = BigInt(document.getElementById('nci-gnb-len').value);
+  let nci;
+  try { nci = /^0x/i.test(raw) ? BigInt(raw) : BigInt(raw); }
+  catch(e) { showErr('nci-err-decode', true); return; }
+  const max36 = (1n << 36n) - 1n;
+  if (nci < 0n || nci > max36) { showErr('nci-err-decode', true); return; }
+  showErr('nci-err-decode', false);
+  const ciBits = 36n - gnbLen;
+  const ci     = nci & ((1n << ciBits) - 1n);
+  const gnbId  = nci >> ciBits;
+  showNciResults(nci, gnbId, ci, gnbLen);
+}
+
+function calcNciEncode() {
+  const gnbLen = BigInt(document.getElementById('nci-gnb-len2').value);
+  const ciBits = 36n - gnbLen;
+  let gnbId, ci;
+  try {
+    gnbId = BigInt(document.getElementById('nci-inp-gnb').value.trim());
+    ci    = BigInt(document.getElementById('nci-inp-ci').value.trim());
+  } catch(e) { showErr('nci-err-encode', true); return; }
+  const maxGnb = (1n << gnbLen) - 1n;
+  const maxCi  = (1n << ciBits) - 1n;
+  if (gnbId < 0n || ci < 0n || gnbId > maxGnb || ci > maxCi) {
+    showErr('nci-err-encode', true); return;
+  }
+  showErr('nci-err-encode', false);
+  const nci = (gnbId << ciBits) | ci;
+  showNciResults(nci, gnbId, ci, gnbLen);
+}
+
+['nci-inp-nci'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') calcNciDecode(); });
+});
+['nci-inp-gnb','nci-inp-ci','nci-inp-ci2'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') calcNciEncode(); });
+});
+
+
+// ─── ECI Calculator (LTE, 28-bit) ─────────────────────────────────────────────
+// ECI = 28-bit: upper 20 bits = eNB ID, lower 8 bits = Local Cell ID (LCId)
+function setEciMode(m) {
+  ['decode','encode'].forEach(id => {
+    document.getElementById('eci-mode-'+id).classList.toggle('active', id===m);
+    document.getElementById('eci-btn-'+id).classList.toggle('active', id===m);
+  });
+  document.getElementById('eci-results').style.display = 'none';
+  ['eci-err-decode','eci-err-encode'].forEach(id => document.getElementById(id).classList.remove('show'));
+}
+
+function showEciResults(eci, enbId, lcid) {
+  const eciHex = '0x' + eci.toString(16).toUpperCase().padStart(7, '0');
+  const enbBin = enbId.toString(2).padStart(20, '0');
+  const lcBin  = lcid.toString(2).padStart(8, '0');
+  document.getElementById('eci-res-eci-dec').textContent = eci.toString();
+  document.getElementById('eci-res-eci-hex').textContent = eciHex;
+  document.getElementById('eci-res-enb').textContent = enbId.toString();
+  document.getElementById('eci-res-lcid').textContent = lcid.toString();
+  document.getElementById('eci-res-formula').innerHTML =
+    'ECI = eNB_ID &times; 256 + LCId<br>' +
+    '&nbsp;&nbsp;&nbsp;&nbsp;= ' + enbId + ' &times; 256 + ' + lcid + '<br>' +
+    '&nbsp;&nbsp;&nbsp;&nbsp;= <strong>' + eci + '</strong> = ' + eciHex;
+  document.getElementById('eci-res-bin').innerHTML =
+    '<span style="color:#1a3a5c;font-weight:700">ECI (bin):</span> ' +
+    '<span style="color:#c0392b">' + enbBin + '</span>' +
+    '<span style="color:#888"> | </span>' +
+    '<span style="color:#0a5c40">' + lcBin + '</span><br>' +
+    '<span style="color:#c0392b">&#9632; eNB ID</span> = 20 bit &nbsp;&nbsp;' +
+    '<span style="color:#0a5c40">&#9632; LCId</span> = 8 bit';
+  document.getElementById('eci-results').style.display = 'block';
+}
+
+function calcEciDecode() {
+  const raw = document.getElementById('eci-inp-eci').value.trim();
+  let eci;
+  try { eci = /^0x/i.test(raw) ? parseInt(raw, 16) : parseInt(raw, 10); }
+  catch(e) { showErr('eci-err-decode', true); return; }
+  if (isNaN(eci) || eci < 0 || eci > 268435455) { showErr('eci-err-decode', true); return; }
+  showErr('eci-err-decode', false);
+  const lcid  = eci & 0xFF;
+  const enbId = eci >> 8;
+  showEciResults(eci, enbId, lcid);
+}
+
+function calcEciEncode() {
+  const enbId = parseInt(document.getElementById('eci-inp-enb').value);
+  const lcid  = parseInt(document.getElementById('eci-inp-lcid').value);
+  if (isNaN(enbId) || isNaN(lcid) || enbId < 0 || lcid < 0 || enbId > 1048575 || lcid > 255) {
+    showErr('eci-err-encode', true); return;
+  }
+  showErr('eci-err-encode', false);
+  const eci = (enbId << 8) | lcid;
+  showEciResults(eci, enbId, lcid);
+}
+
+['eci-inp-eci'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') calcEciDecode(); });
+});
+['eci-inp-enb','eci-inp-lcid'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') calcEciEncode(); });
+});
 
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 
